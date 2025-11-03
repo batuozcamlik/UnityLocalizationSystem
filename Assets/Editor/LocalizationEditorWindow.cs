@@ -181,8 +181,66 @@ public class LocalizationEditorWindow : EditorWindow
         EditorGUILayout.Space(4);
         DrawHeader();
         DrawGrid();
+
         UpdateTitle();
+
+        float padX = 10f;
+        float padY = 8f;
+
+        string leftText = "Created by Batu Özçamlık";
+        string rightText = " |   www.batuozcamlik.com";
+
+        GUIStyle leftStyle = new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.MiddleRight,
+            fontSize = 13,
+            fontStyle = FontStyle.Bold
+        };
+
+        GUIStyle rightStyle = new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.MiddleRight,
+            fontSize = 13,
+            fontStyle = FontStyle.Normal
+        };
+
+      
+        Vector2 sizeLeft = leftStyle.CalcSize(new GUIContent(leftText));
+        Vector2 sizeRight = rightStyle.CalcSize(new GUIContent(rightText));
+
+        float totalW = sizeLeft.x + sizeRight.x;
+        float lineH = Mathf.Max(sizeLeft.y, sizeRight.y);
+
+        Rect area = new Rect(
+            position.width - totalW - padX,
+            position.height - lineH - padY,
+            totalW,
+            lineH
+        );
+
+    
+        GUI.Label(
+            new Rect(area.x, area.y, sizeLeft.x, lineH),
+            leftText,
+            leftStyle
+        );
+
+      
+        Color prev = GUI.color;
+        GUI.color = new Color(1f, 1f, 1f, 0.40f);
+
+        GUI.Label(
+            new Rect(area.x + sizeLeft.x, area.y, sizeRight.x, lineH),
+            rightText,
+            rightStyle
+        );
+
+        GUI.color = prev;
+
+      
     }
+
+
 
     private void DrawToolbar()
     {
