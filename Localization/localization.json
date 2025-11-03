@@ -1,0 +1,97 @@
+{
+    "languages": [
+        {
+            "name": "Türkçe"
+        },
+        {
+            "name": "İngilizce"
+        }
+    ],
+    "words": [
+        {
+            "items": [
+                "Elma",
+                "Araba",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime",
+                "YeniKelime"
+            ]
+        },
+        {
+            "items": [
+                "Apple",
+                "Car",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__",
+                "__MISSING__"
+            ]
+        }
+    ],
+    "selectedLanguageIndex": 1
+}
