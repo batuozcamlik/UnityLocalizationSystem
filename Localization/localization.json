@@ -8,6 +8,9 @@
         },
         {
             "name": "Japonca"
+        },
+        {
+            "name": "Italyanca"
         }
     ],
     "words": [
@@ -27,6 +30,12 @@
             "items": [
                 "こんにちは",
                 "車"
+            ]
+        },
+        {
+            "items": [
+                "__MISSING__",
+                "__MISSING__"
             ]
         }
     ],
