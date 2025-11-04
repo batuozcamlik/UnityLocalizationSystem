@@ -1,97 +1,34 @@
 {
     "languages": [
         {
-            "name": "Türkçe"
+            "name": "Turkce"
         },
         {
-            "name": "İngilizce"
+            "name": "Ingilizce"
+        },
+        {
+            "name": "Japonca"
         }
     ],
     "words": [
         {
             "items": [
-                "Elma",
-                "Araba",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime",
-                "YeniKelime"
+                "Merhaba",
+                "Araba"
             ]
         },
         {
             "items": [
-                "Apple",
-                "Car",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__",
-                "__MISSING__"
+                "Hello",
+                "Car"
+            ]
+        },
+        {
+            "items": [
+                "こんにちは",
+                "車"
             ]
         }
     ],
-    "selectedLanguageIndex": 1
+    "selectedLanguageIndex": 2
 }
