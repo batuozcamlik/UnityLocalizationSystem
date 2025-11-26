@@ -18,15 +18,19 @@ public class Test : MonoBehaviour
         Debug.Log(LocalizationManager.Instance.Get(word));
     }
 
-    public void ChangeDil(int index)
+
+    public void ChangeDil(int index, string languageName)
     {
         if (LocalizationManager.Instance == null)
         {
             Debug.LogWarning("LocalizationManager instance not found.");
             return;
         }
+
         LocalizationManager.Instance.SetLanguage(index);
-        Debug.Log($"Language changed: {index}");
+
+      
+        Debug.Log($"Change Language : {languageName}");
     }
     #endregion
 }
@@ -70,6 +74,7 @@ public class TestCodeEditor : Editor
         EditorGUILayout.EndHorizontal();
 
         GUILayout.Space(6);
+
         EditorGUILayout.BeginHorizontal();
 
         if (languageNames == null || languageNames.Length == 0)
@@ -93,7 +98,8 @@ public class TestCodeEditor : Editor
                 }
                 else
                 {
-                    testCode.ChangeDil(languageIndex);
+                    string selectedLangName = languageNames[languageIndex];
+                    testCode.ChangeDil(languageIndex, selectedLangName);
                 }
             }
         }
@@ -144,6 +150,7 @@ public class TestCodeEditor : Editor
             }
         }
 
+      
         string fullPath = Path.Combine(Application.dataPath, "..", relativeJsonPath).Replace("\\", "/");
         if (File.Exists(fullPath))
         {

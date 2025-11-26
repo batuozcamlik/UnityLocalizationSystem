@@ -199,12 +199,12 @@ public class LocalizationEditorWindow : EditorWindow
 
                 using (new EditorGUI.DisabledScope(lang == 0))
                 {
-                    if (GUI.Button(btnRect, "Sil"))
+                    if (GUI.Button(btnRect, "Del")) 
                     {
                         if (EditorUtility.DisplayDialog(
-                            "Dili sil",
-                            $"'{SafeLangName(lang)}' dilini silmek istediğine emin misin?",
-                            "Evet, sil", "Vazgeç"))
+                            "Delete Language", 
+                            $"Are you sure you want to delete the language '{SafeLangName(lang)}'?",
+                            "Yes, delete", "Cancel")) 
                         {
                             int langToRemove = lang;
                             EditorApplication.delayCall += () =>
@@ -257,12 +257,12 @@ public class LocalizationEditorWindow : EditorWindow
                         MarkDirty();
                     }
 
-                    if (GUI.Button(btnRect, "Sil"))
+                    if (GUI.Button(btnRect, "Delete")) 
                     {
                         if (EditorUtility.DisplayDialog(
-                            "Kelimeyi sil",
-                            $"Bu satırı (index {actualIdx}) tüm dillerden silmek istediğine emin misin?",
-                            "Evet, sil", "Vazgeç"))
+                            "Delete Word", 
+                            $"Are you sure you want to delete this row (index {actualIdx}) from all languages?", 
+                            "Yes, delete", "Cancel")) 
                         {
                             int indexToRemove = actualIdx;
                             EditorApplication.delayCall += () =>
@@ -302,7 +302,7 @@ public class LocalizationEditorWindow : EditorWindow
             for (int l = 0; l < data.languages.Count; l++)
             {
                 if (data.words.Count <= l) data.words.Add(new WordColumn());
-                data.words[l].items.Add(l == 0 ? "YeniKelime" : "__MISSING__");
+                data.words[l].items.Add(l == 0 ? "NewWord" : "__MISSING__"); 
             }
 
             ApplyFilterAndRebuildOrderList();
@@ -418,10 +418,10 @@ public class LocalizationEditorWindow : EditorWindow
             if (newPath != relativeJsonPath)
                 relativeJsonPath = newPath;
 
-            if (GUILayout.Button("Yükle", EditorStyles.toolbarButton, GUILayout.Width(60)))
+            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(60))) 
                 SafeLoad();
 
-            if (GUILayout.Button("Kaydet", EditorStyles.toolbarButton, GUILayout.Width(60)))
+            if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(60))) 
                 Save();
 
             GUILayout.FlexibleSpace();
@@ -433,7 +433,7 @@ public class LocalizationEditorWindow : EditorWindow
             );
 
             int newSel = EditorGUILayout.Popup(
-                "Seçili Dil",
+                "Selected Language", 
                 clamped,
                 GetLangNames(),
                 GUILayout.Width(280)
@@ -448,7 +448,7 @@ public class LocalizationEditorWindow : EditorWindow
             if (isDirty)
             {
                 GUILayout.Space(12);
-                GUILayout.Label("⚠ Kaydedilmedi", EditorStyles.boldLabel, GUILayout.Width(120));
+                GUILayout.Label("⚠ Unsaved", EditorStyles.boldLabel, GUILayout.Width(120)); 
             }
         }
 
@@ -457,7 +457,7 @@ public class LocalizationEditorWindow : EditorWindow
             using (new EditorGUI.DisabledScope(data.languages.Count == 0))
             {
                 string current = (data.languages.Count > 0) ? (data.languages[0].name ?? "") : "";
-                string edited = EditorGUILayout.TextField("Default Dil Adı (Index 0)", current, GUILayout.MinWidth(220));
+                string edited = EditorGUILayout.TextField("Default Language Name (Index 0)", current, GUILayout.MinWidth(220)); 
                 if (data.languages.Count > 0 && edited != current)
                 {
                     data.languages[0].name = edited;
@@ -470,8 +470,8 @@ public class LocalizationEditorWindow : EditorWindow
 
         using (new EditorGUILayout.HorizontalScope())
         {
-            newLanguageName = EditorGUILayout.TextField("Yeni Dil Adı", newLanguageName);
-            if (GUILayout.Button("Dili Ekle", GUILayout.Width(100)))
+            newLanguageName = EditorGUILayout.TextField("New Language Name", newLanguageName); 
+            if (GUILayout.Button("Add Language", GUILayout.Width(100))) 
             {
                 if (!string.IsNullOrWhiteSpace(newLanguageName))
                 {
@@ -502,7 +502,7 @@ public class LocalizationEditorWindow : EditorWindow
                 EditorGUI.BeginChangeCheck();
 
                 filterLanguageIndex = EditorGUILayout.Popup(
-                    new GUIContent("Filtre Dili"),
+                    new GUIContent("Filter Language"),
                     Mathf.Clamp(
                         filterLanguageIndex,
                         0,
@@ -513,7 +513,7 @@ public class LocalizationEditorWindow : EditorWindow
                 );
 
                 filterText = EditorGUILayout.TextField(
-                    $"Filtre ({SafeLangName(filterLanguageIndex)})",
+                    $"Filter ({SafeLangName(filterLanguageIndex)})",
                     filterText,
                     GUILayout.Width(280)
                 );
@@ -586,7 +586,7 @@ public class LocalizationEditorWindow : EditorWindow
         EditorGUILayout.Space(6);
         using (new EditorGUILayout.HorizontalScope())
         {
-            if (GUILayout.Button("Yeni Kelime Ekle"))
+            if (GUILayout.Button("Add New Word"))
             {
                 if (reorderList != null && reorderList.onAddCallback != null)
                 {
@@ -594,7 +594,7 @@ public class LocalizationEditorWindow : EditorWindow
                 }
             }
 
-            if (GUILayout.Button("Kaydet"))
+            if (GUILayout.Button("Save")) 
                 Save();
 
             GUILayout.FlexibleSpace();
@@ -647,11 +647,11 @@ public class LocalizationEditorWindow : EditorWindow
         string currentJson = JsonUtility.ToJson(data, true);
 
         int choice = EditorUtility.DisplayDialogComplex(
-            "Kaydedilmemiş Değişiklikler",
-            "Kaydetmeden kapatmak üzeresin. Ne yapmak istersin?",
-            "Kaydet ve Kapat",
-            "Kapat (Kaydetme)",
-            "İptal"
+            "Unsaved Changes", 
+            "You are about to close without saving. What would you like to do?", 
+            "Save and Close", 
+            "Close (Don't Save)",
+            "Cancel" 
         );
 
         if (choice == 0)
