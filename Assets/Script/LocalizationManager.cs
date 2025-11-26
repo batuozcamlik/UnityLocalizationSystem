@@ -16,8 +16,7 @@ public class LocalizationManager : MonoBehaviour
 
     [SerializeField] private LocalizationData data = new LocalizationData();
 
-    private Dictionary<string, int> defaultIndexMap = new Dictionary<string, int>(StringComparer.Ordinal);
-
+    private Dictionary<string, int> defaultIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
     public int DefaultLanguageIndex => 0;
     public int SelectedLanguageIndex => data.selectedLanguageIndex;
     public LocalizationData Data => data;
@@ -151,13 +150,17 @@ public class LocalizationManager : MonoBehaviour
     private void RebuildDefaultIndexMap()
     {
         defaultIndexMap.Clear();
+        defaultIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
         if (data.words.Count == 0) return;
 
         var def = data.words[DefaultLanguageIndex].items;
         for (int i = 0; i < def.Count; i++)
         {
-            string w = def[i] ?? "";
-            if (!defaultIndexMap.ContainsKey(w))
+            string raw = def[i] ?? "";
+            string w = raw.Trim();
+
+            if (!string.IsNullOrEmpty(w) && !defaultIndexMap.ContainsKey(w))
                 defaultIndexMap[w] = i;
         }
     }
@@ -250,13 +253,15 @@ public class LocalizationManager : MonoBehaviour
         if (string.IsNullOrEmpty(wordInDefault))
             return "";
 
-        if (!defaultIndexMap.TryGetValue(wordInDefault, out int idx))
-        {
-            idx = FindIndexInDefault(wordInDefault);
-            if (idx == -1)
-                return wordInDefault;
+        string searchKey = wordInDefault.Trim();
 
-            defaultIndexMap[wordInDefault] = idx;
+        if (!defaultIndexMap.TryGetValue(searchKey, out int idx))
+        {
+            idx = FindIndexInDefault(searchKey);
+            if (idx == -1)
+                return wordInDefault; 
+
+            defaultIndexMap[searchKey] = idx;
         }
 
         return GetByIndex(idx);
@@ -282,10 +287,15 @@ public class LocalizationManager : MonoBehaviour
     {
         if (data.words.Count == 0) return -1;
 
+      
+        string searchKey = (wordInDefault ?? "").Trim();
+
         var def = data.words[DefaultLanguageIndex].items;
         for (int i = 0; i < def.Count; i++)
         {
-            if ((def[i] ?? "") == wordInDefault)
+            string item = (def[i] ?? "").Trim();
+
+            if (string.Equals(item, searchKey, StringComparison.OrdinalIgnoreCase))
                 return i;
         }
         return -1;
