@@ -1,40 +1,110 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using UnityEditor;
+using System.Text;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
+using TMPro;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class Test : MonoBehaviour
 {
+    [Header("UI Settings")]
+    public TextMeshProUGUI allWordsText;
+
     #region Runtime Functions
-    public void GetString(string word)
+
+    private IEnumerator Start()
     {
+        yield return null;
+
         if (LocalizationManager.Instance == null)
         {
-            Debug.LogWarning("LocalizationManager instance not found.");
-            return;
+            Debug.LogWarning("LocalizationManager sahnede bulunamadý!");
+            yield break;
         }
-        Debug.Log(LocalizationManager.Instance.Get(word));
+
+        PrintAllWords();
     }
 
+    public void PrintAllWords()
+    {
+        if (allWordsText == null)
+        {
+            Debug.LogWarning("TextMeshPro objesi atanmamýþ!");
+            return;
+        }
+
+        if (LocalizationManager.Instance == null || LocalizationManager.Instance.Data == null)
+            return;
+
+        var manager = LocalizationManager.Instance;
+        var data = manager.Data;
+
+        if (data.words == null || data.words.Count == 0)
+        {
+            allWordsText.text = "Liste boþ veya yüklenemedi.";
+            return;
+        }
+
+        int selectedIndex = manager.SelectedLanguageIndex;
+        int defaultIndex = manager.DefaultLanguageIndex;
+
+        if (selectedIndex < 0 || selectedIndex >= data.languages.Count) selectedIndex = 0;
+
+        List<string> selectedList = data.words[selectedIndex].items;
+        List<string> defaultList = data.words[defaultIndex].items;
+
+        string selectedLangName = data.languages[selectedIndex].name;
+        string defaultLangName = data.languages[defaultIndex].name;
+
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine($"<b>--- ÇEVÝRÝ KONTROL ---</b>");
+        sb.AppendLine($"<color=yellow>Key ({defaultLangName})</color> => <color=green>Value ({selectedLangName})</color>");
+        sb.AppendLine("-------------------------");
+
+        int count = Mathf.Min(selectedList.Count, defaultList.Count);
+
+        for (int i = 0; i < count; i++)
+        {
+            string key = defaultList[i];
+            string value = selectedList[i];
+
+            if (string.IsNullOrEmpty(key)) key = "[BOÞ]";
+            if (string.IsNullOrEmpty(value)) value = "[BOÞ]";
+
+            sb.AppendLine($"<b>[{i}]</b> {key}  =>  {value}");
+        }
+
+        if (selectedList.Count != defaultList.Count)
+        {
+            sb.AppendLine("\n<color=red>HATA: Dil listeleri eþit uzunlukta deðil!</color>");
+        }
+
+        allWordsText.text = sb.ToString();
+    }
+
+    public void GetString(string word)
+    {
+        if (LocalizationManager.Instance != null)
+            Debug.Log(LocalizationManager.Instance.Get(word));
+    }
 
     public void ChangeDil(int index, string languageName)
     {
-        if (LocalizationManager.Instance == null)
-        {
-            Debug.LogWarning("LocalizationManager instance not found.");
-            return;
-        }
+        if (LocalizationManager.Instance == null) return;
 
         LocalizationManager.Instance.SetLanguage(index);
+        Debug.Log($"Dil Deðiþti : {languageName}");
 
-      
-        Debug.Log($"Change Language : {languageName}");
+        PrintAllWords();
     }
     #endregion
 }
 
+#if UNITY_EDITOR
 [CustomEditor(typeof(Test))]
 public class TestCodeEditor : Editor
 {
@@ -42,7 +112,7 @@ public class TestCodeEditor : Editor
     private string word = "Hello";
     private int languageIndex = 0;
     private string[] languageNames = new string[0];
-    private string relativeJsonPath = "Localization/localization.json";
+    private string jsonFileName = "localization.json";
     #endregion
 
     #region Inspector GUI
@@ -56,15 +126,22 @@ public class TestCodeEditor : Editor
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter
         };
-        EditorGUILayout.LabelField("Test System", titleStyle);
+        EditorGUILayout.LabelField("Test & Debug System", titleStyle);
         GUILayout.Space(8);
 
         Test testCode = (Test)target;
         RefreshLanguageList();
 
         EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField("Text Output:", GUILayout.Width(80));
+        testCode.allWordsText = (TextMeshProUGUI)EditorGUILayout.ObjectField(testCode.allWordsText, typeof(TextMeshProUGUI), true);
+        EditorGUILayout.EndHorizontal();
+
+        GUILayout.Space(5);
+
+        EditorGUILayout.BeginHorizontal();
         word = EditorGUILayout.TextField(word, GUILayout.ExpandWidth(true));
-        if (GUILayout.Button("Get", GUILayout.Width(70)))
+        if (GUILayout.Button("Get Log", GUILayout.Width(70)))
         {
             if (LocalizationManager.Instance == null)
                 Debug.LogWarning("LocalizationManager instance not found.");
@@ -76,13 +153,9 @@ public class TestCodeEditor : Editor
         GUILayout.Space(6);
 
         EditorGUILayout.BeginHorizontal();
-
         if (languageNames == null || languageNames.Length == 0)
         {
-            EditorGUILayout.LabelField("No languages found", GUILayout.ExpandWidth(true));
-            EditorGUI.BeginDisabledGroup(true);
-            if (GUILayout.Button("Change", GUILayout.Width(70))) { }
-            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.LabelField("Dil bulunamadý", GUILayout.ExpandWidth(true));
         }
         else
         {
@@ -92,44 +165,23 @@ public class TestCodeEditor : Editor
 
             if (GUILayout.Button("Change", GUILayout.Width(70)))
             {
-                if (LocalizationManager.Instance == null)
-                {
-                    Debug.LogWarning("LocalizationManager instance not found. (ChangeDil call failed.)");
-                }
-                else
+                if (LocalizationManager.Instance != null)
                 {
                     string selectedLangName = languageNames[languageIndex];
                     testCode.ChangeDil(languageIndex, selectedLangName);
                 }
             }
         }
-
         EditorGUILayout.EndHorizontal();
 
         GUILayout.Space(10);
         EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         GUILayout.Space(5);
-
-        GUIStyle footerStyle = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = 12,
-            alignment = TextAnchor.MiddleCenter,
-            fontStyle = FontStyle.Bold
-        };
-        EditorGUILayout.LabelField("Created by Batu Özçamlýk", footerStyle);
-        GUILayout.Space(5);
-
-        GUIStyle signatureStyle = new GUIStyle(GUI.skin.label)
-        {
-            alignment = TextAnchor.MiddleRight,
-            fontStyle = FontStyle.Italic
-        };
-        EditorGUILayout.LabelField("www.batuozcamlik.com", signatureStyle);
-        GUILayout.Space(5);
+        EditorGUILayout.LabelField("Created by Batu Özçamlýk", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 10 });
     }
     #endregion
 
-    #region Language Handling
+    #region Helpers
     private void RefreshLanguageList()
     {
         if (LocalizationManager.Instance != null && LocalizationManager.Instance.Data != null)
@@ -138,20 +190,12 @@ public class TestCodeEditor : Editor
             if (langs != null && langs.Count > 0)
             {
                 EnsureLanguageNamesFrom(langs);
-                if (languageIndex < 0 || languageIndex >= languageNames.Length)
-                {
-                    try
-                    {
-                        languageIndex = LocalizationManager.Instance.SelectedLanguageIndex;
-                    }
-                    catch { languageIndex = 0; }
-                }
                 return;
             }
         }
 
-      
-        string fullPath = Path.Combine(Application.dataPath, "..", relativeJsonPath).Replace("\\", "/");
+        string fullPath = Path.Combine(Application.dataPath, "Resources", jsonFileName);
+
         if (File.Exists(fullPath))
         {
             try
@@ -161,10 +205,6 @@ public class TestCodeEditor : Editor
                 if (loaded != null && loaded.languages != null && loaded.languages.Count > 0)
                 {
                     EnsureLanguageNamesFrom(loaded.languages);
-                    if (languageIndex < 0 || languageIndex >= languageNames.Length)
-                    {
-                        languageIndex = Mathf.Clamp(loaded.selectedLanguageIndex, 0, languageNames.Length - 1);
-                    }
                     return;
                 }
             }
@@ -176,25 +216,19 @@ public class TestCodeEditor : Editor
 
     private void EnsureLanguageNamesFrom(IList langs)
     {
-        var list = langs as System.Collections.IList;
-        if (list == null)
-        {
-            languageNames = new string[0];
-            return;
-        }
+        if (langs == null) { languageNames = new string[0]; return; }
 
-        languageNames = new string[list.Count];
-        for (int i = 0; i < list.Count; i++)
+        languageNames = new string[langs.Count];
+        for (int i = 0; i < langs.Count; i++)
         {
-            object li = list[i];
+            object li = langs[i];
             if (li == null)
             {
                 languageNames[i] = $"Lang {i}";
                 continue;
             }
 
-            var type = li.GetType();
-            var field = type.GetField("name");
+            var field = li.GetType().GetField("name");
             if (field != null)
             {
                 var val = field.GetValue(li) as string;
@@ -202,18 +236,10 @@ public class TestCodeEditor : Editor
             }
             else
             {
-                var prop = type.GetProperty("name");
-                if (prop != null)
-                {
-                    var val = prop.GetValue(li, null) as string;
-                    languageNames[i] = string.IsNullOrEmpty(val) ? $"Lang {i}" : val;
-                }
-                else
-                {
-                    languageNames[i] = $"Lang {i}";
-                }
+                languageNames[i] = $"Lang {i}";
             }
         }
     }
     #endregion
 }
+#endif

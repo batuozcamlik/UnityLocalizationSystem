@@ -1,0 +1,55 @@
+{
+    "languages": [
+        {
+            "name": "English"
+        },
+        {
+            "name": "Turkish"
+        },
+        {
+            "name": "Deutsch"
+        },
+        {
+            "name": "Japanese"
+        }
+    ],
+    "words": [
+        {
+            "items": [
+                "Hello",
+                "How are you",
+                "Quit",
+                "Settings",
+                "Play"
+            ]
+        },
+        {
+            "items": [
+                "Merhaba",
+                "Nasılsın",
+                "Çıkış",
+                "Ayarlar",
+                "Oyna"
+            ]
+        },
+        {
+            "items": [
+                "Hallo",
+                "Wie geht's",
+                "Beenden",
+                "Einstellungen",
+                "Spielen"
+            ]
+        },
+        {
+            "items": [
+                "こんにちは",
+                "お元気ですか",
+                "終了",
+                "設定",
+                "プレイ"
+            ]
+        }
+    ],
+    "selectedLanguageIndex": 2
+}

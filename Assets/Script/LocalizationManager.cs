@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using UnityEditor;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class LocalizationManager : MonoBehaviour
 {
@@ -10,7 +13,10 @@ public class LocalizationManager : MonoBehaviour
 
     public static LocalizationManager Instance;
 
-    public string relativeJsonPath = "Localization/localization.json";
+    // HATAYI ÇÖZEN KISIM: Bu değişkeni geri getirdik.
+    // Dosya adını buradan okuyacağız (örn: "localization.json")
+    public string relativeJsonPath = "localization.json";
+
     public bool createSampleIfMissing = true;
     public string defaultLanguageName = "English";
 
@@ -23,7 +29,6 @@ public class LocalizationManager : MonoBehaviour
 
     #endregion
 
-
     #region Path
 
     public string FullPath
@@ -31,16 +36,22 @@ public class LocalizationManager : MonoBehaviour
         get
         {
 #if UNITY_EDITOR
-            string projectPath = Application.dataPath;
-            return Path.Combine(projectPath, "..", relativeJsonPath).Replace("\\", "/");
+            // Editörde: Assets/Resources/[relativeJsonPath] konumuna zorluyoruz.
+            // Bu sayede dosya Resources klasöründe oluşur ve Build'e dahil olur.
+            string resourcesPath = Path.Combine(Application.dataPath, "Resources");
+
+            // Eğer dosya adında klasör yapısı varsa onu da hesaba katalım
+            string combinedPath = Path.Combine(resourcesPath, relativeJsonPath).Replace("\\", "/");
+
+            return combinedPath;
 #else
+            // Oyunda (Mobil/PC): Cihazın kalıcı veri yoluna kaydeder.
             return Path.Combine(Application.persistentDataPath, relativeJsonPath);
 #endif
         }
     }
 
     #endregion
-
 
     #region Lifecycle
 
@@ -55,32 +66,23 @@ public class LocalizationManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        EnsureFolderExists();
         LoadOrCreate();
         RebuildDefaultIndexMap();
     }
 
-    private void EnsureFolderExists()
-    {
-        string dir = Path.GetDirectoryName(FullPath);
-        if (!Directory.Exists(dir))
-            Directory.CreateDirectory(dir);
-    }
-
     #endregion
-
 
     #region Load / Save
 
     public void LoadOrCreate()
     {
+        // 1. Önce PersistentDataPath'te (yazılabilir alanda) dosya var mı diye bakar.
         if (File.Exists(FullPath))
         {
             try
             {
                 string json = File.ReadAllText(FullPath);
-                var loaded = JsonUtility.FromJson<LocalizationData>(json);
-                data = loaded ?? new LocalizationData();
+                data = JsonUtility.FromJson<LocalizationData>(json) ?? new LocalizationData();
             }
             catch
             {
@@ -89,15 +91,28 @@ public class LocalizationManager : MonoBehaviour
         }
         else
         {
-            if (createSampleIfMissing)
+            // 2. Eğer PersistentDataPath'te yoksa, Resources'tan (Build içinden) okumaya çalışır.
+            // Resources.Load uzantı (.json) istemez, bu yüzden onu siliyoruz.
+            string resourceName = Path.GetFileNameWithoutExtension(relativeJsonPath);
+            TextAsset textAsset = Resources.Load<TextAsset>(resourceName);
+
+            if (textAsset != null)
             {
-                CreateSampleData();
-                Save();
+                data = JsonUtility.FromJson<LocalizationData>(textAsset.text) ?? new LocalizationData();
+                Save(); // Hemen yazılabilir alana kopyala
             }
             else
             {
-                data = new LocalizationData();
-                AddLanguage(defaultLanguageName);
+                if (createSampleIfMissing)
+                {
+                    CreateSampleData();
+                    Save();
+                }
+                else
+                {
+                    data = new LocalizationData();
+                    AddLanguage(defaultLanguageName);
+                }
             }
         }
 
@@ -112,38 +127,62 @@ public class LocalizationManager : MonoBehaviour
         try
         {
             var json = JsonUtility.ToJson(data, true);
-            EnsureFolderExists();
+
+            string directory = Path.GetDirectoryName(FullPath);
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
             File.WriteAllText(FullPath, json);
+
+#if UNITY_EDITOR
+            AssetDatabase.Refresh();
+#endif
         }
-        catch { }
+        catch (Exception e)
+        {
+            Debug.LogError("Localization Save Error: " + e.Message);
+        }
     }
 
     private void CreateSampleData()
     {
         data = new LocalizationData();
 
+      
         data.languages.Add(new LanguageInfo { name = defaultLanguageName });
-        data.languages.Add(new LanguageInfo { name = "English" });
+        data.languages.Add(new LanguageInfo { name = "Turkish" });
         data.languages.Add(new LanguageInfo { name = "Deutsch" });
+        data.languages.Add(new LanguageInfo { name = "Japanese" }); 
 
-        data.words.Add(new WordColumn
-        {
-            items = new List<string> { "Merhaba", "Nasýlsýn", "Çýkýþ", "Ayarlar", "Oyna" }
-        });
+       
         data.words.Add(new WordColumn
         {
             items = new List<string> { "Hello", "How are you", "Quit", "Settings", "Play" }
         });
+
+        
+        data.words.Add(new WordColumn
+        {
+            items = new List<string> { "Merhaba", "Nasılsın", "Çıkış", "Ayarlar", "Oyna" }
+        });
+
+       
         data.words.Add(new WordColumn
         {
             items = new List<string> { "Hallo", "Wie geht's", "Beenden", "Einstellungen", "Spielen" }
         });
 
-        data.selectedLanguageIndex = 1;
+    
+        data.words.Add(new WordColumn
+        {
+            items = new List<string> { "こんにちは", "お元気ですか", "終了", "設定", "プレイ" }
+        });
+
+       
+        data.selectedLanguageIndex = 0;
     }
 
     #endregion
-
 
     #region Data Helpers
 
@@ -182,7 +221,6 @@ public class LocalizationManager : MonoBehaviour
     }
 
     #endregion
-
 
     #region Language / Word API
 
@@ -245,7 +283,6 @@ public class LocalizationManager : MonoBehaviour
 
     #endregion
 
-
     #region Lookup
 
     public string Get(string wordInDefault)
@@ -259,7 +296,7 @@ public class LocalizationManager : MonoBehaviour
         {
             idx = FindIndexInDefault(searchKey);
             if (idx == -1)
-                return wordInDefault; 
+                return wordInDefault;
 
             defaultIndexMap[searchKey] = idx;
         }
@@ -287,14 +324,12 @@ public class LocalizationManager : MonoBehaviour
     {
         if (data.words.Count == 0) return -1;
 
-      
         string searchKey = (wordInDefault ?? "").Trim();
 
         var def = data.words[DefaultLanguageIndex].items;
         for (int i = 0; i < def.Count; i++)
         {
             string item = (def[i] ?? "").Trim();
-
             if (string.Equals(item, searchKey, StringComparison.OrdinalIgnoreCase))
                 return i;
         }
@@ -320,7 +355,6 @@ public class LocalizationManager : MonoBehaviour
 
     #endregion
 }
-
 
 #region Custom Inspector
 
@@ -352,8 +386,6 @@ public class LocalizationInspector : Editor
         signatureStyle.alignment = TextAnchor.MiddleRight;
         signatureStyle.fontStyle = FontStyle.Italic;
         EditorGUILayout.LabelField("www.batuozcamlik.com", signatureStyle);
-
-
     }
 }
 #endif

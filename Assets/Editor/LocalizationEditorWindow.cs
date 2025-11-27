@@ -8,7 +8,8 @@ using UnityEditorInternal;
 
 public class LocalizationEditorWindow : EditorWindow
 {
-    private string relativeJsonPath = "Localization/localization.json";
+    // Dosya adı sabit kalsın, yolu FullPath içinde belirleyeceğiz.
+    private string relativeJsonPath = "localization.json";
     private LocalizationData data = new LocalizationData();
 
     private Vector2 scrollPosHeader;
@@ -55,18 +56,28 @@ public class LocalizationEditorWindow : EditorWindow
         detectedManager = FindObjectOfType<LocalizationManager>();
         if (detectedManager != null)
         {
-            relativeJsonPath = detectedManager.relativeJsonPath;
+            // Manager üzerindeki dosya adını alalım ama yolu biz yöneteceğiz
+            if (!string.IsNullOrEmpty(detectedManager.relativeJsonPath))
+                relativeJsonPath = Path.GetFileName(detectedManager.relativeJsonPath);
+
             if (!string.IsNullOrWhiteSpace(detectedManager.defaultLanguageName))
                 fallbackDefaultName = detectedManager.defaultLanguageName;
         }
     }
 
+    // DÜZELTİLEN KISIM BURASI
     private string FullPath
     {
         get
         {
-            string projectPath = Application.dataPath;
-            return Path.Combine(projectPath, "..", relativeJsonPath).Replace("\\", "/");
+            // Dosyayı her zaman Assets/Resources içine kaydetmeye zorluyoruz.
+            // Bu sayede oyun Build alındığında dosya kaybolmaz.
+            string resourcesPath = Path.Combine(Application.dataPath, "Resources");
+
+            if (!Directory.Exists(resourcesPath))
+                Directory.CreateDirectory(resourcesPath);
+
+            return Path.Combine(resourcesPath, relativeJsonPath).Replace("\\", "/");
         }
     }
 
@@ -89,7 +100,10 @@ public class LocalizationEditorWindow : EditorWindow
     {
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(FullPath));
+            // Klasör yoksa oluştur
+            string dir = Path.GetDirectoryName(FullPath);
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
             if (File.Exists(FullPath))
             {
                 var json = File.ReadAllText(FullPath);
@@ -136,16 +150,24 @@ public class LocalizationEditorWindow : EditorWindow
     {
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(FullPath));
+            string dir = Path.GetDirectoryName(FullPath);
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
             var json = JsonUtility.ToJson(data, true);
             File.WriteAllText(FullPath, json);
+
+            // Unity'nin dosyayı hemen görmesi için yenile
             AssetDatabase.Refresh();
 
             isDirty = false;
             UpdateTitle();
             Repaint();
+            Debug.Log($"Localization Saved to: {FullPath}");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Debug.LogError("Save Error: " + ex.Message);
+        }
     }
 
     private void NormalizeLengths()
@@ -199,12 +221,12 @@ public class LocalizationEditorWindow : EditorWindow
 
                 using (new EditorGUI.DisabledScope(lang == 0))
                 {
-                    if (GUI.Button(btnRect, "Del")) 
+                    if (GUI.Button(btnRect, "Del"))
                     {
                         if (EditorUtility.DisplayDialog(
-                            "Delete Language", 
+                            "Delete Language",
                             $"Are you sure you want to delete the language '{SafeLangName(lang)}'?",
-                            "Yes, delete", "Cancel")) 
+                            "Yes, delete", "Cancel"))
                         {
                             int langToRemove = lang;
                             EditorApplication.delayCall += () =>
@@ -257,12 +279,12 @@ public class LocalizationEditorWindow : EditorWindow
                         MarkDirty();
                     }
 
-                    if (GUI.Button(btnRect, "Delete")) 
+                    if (GUI.Button(btnRect, "Delete"))
                     {
                         if (EditorUtility.DisplayDialog(
-                            "Delete Word", 
-                            $"Are you sure you want to delete this row (index {actualIdx}) from all languages?", 
-                            "Yes, delete", "Cancel")) 
+                            "Delete Word",
+                            $"Are you sure you want to delete this row (index {actualIdx}) from all languages?",
+                            "Yes, delete", "Cancel"))
                         {
                             int indexToRemove = actualIdx;
                             EditorApplication.delayCall += () =>
@@ -302,7 +324,7 @@ public class LocalizationEditorWindow : EditorWindow
             for (int l = 0; l < data.languages.Count; l++)
             {
                 if (data.words.Count <= l) data.words.Add(new WordColumn());
-                data.words[l].items.Add(l == 0 ? "NewWord" : "__MISSING__"); 
+                data.words[l].items.Add(l == 0 ? "NewWord" : "__MISSING__");
             }
 
             ApplyFilterAndRebuildOrderList();
@@ -413,15 +435,16 @@ public class LocalizationEditorWindow : EditorWindow
     {
         using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
         {
-            EditorGUILayout.LabelField("JSON Path:", GUILayout.Width(70));
-            string newPath = EditorGUILayout.TextField(relativeJsonPath, GUILayout.MinWidth(220));
+            EditorGUILayout.LabelField("JSON Name:", GUILayout.Width(70));
+            // Sadece dosya ismini gösteriyoruz çünkü yol sabit (Assets/Resources)
+            string newPath = EditorGUILayout.TextField(relativeJsonPath, GUILayout.MinWidth(150));
             if (newPath != relativeJsonPath)
                 relativeJsonPath = newPath;
 
-            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(60))) 
+            if (GUILayout.Button("Load", EditorStyles.toolbarButton, GUILayout.Width(60)))
                 SafeLoad();
 
-            if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(60))) 
+            if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(60)))
                 Save();
 
             GUILayout.FlexibleSpace();
@@ -433,7 +456,7 @@ public class LocalizationEditorWindow : EditorWindow
             );
 
             int newSel = EditorGUILayout.Popup(
-                "Selected Language", 
+                "Selected Language",
                 clamped,
                 GetLangNames(),
                 GUILayout.Width(280)
@@ -448,7 +471,7 @@ public class LocalizationEditorWindow : EditorWindow
             if (isDirty)
             {
                 GUILayout.Space(12);
-                GUILayout.Label("⚠ Unsaved", EditorStyles.boldLabel, GUILayout.Width(120)); 
+                GUILayout.Label("⚠ Unsaved", EditorStyles.boldLabel, GUILayout.Width(120));
             }
         }
 
@@ -457,7 +480,7 @@ public class LocalizationEditorWindow : EditorWindow
             using (new EditorGUI.DisabledScope(data.languages.Count == 0))
             {
                 string current = (data.languages.Count > 0) ? (data.languages[0].name ?? "") : "";
-                string edited = EditorGUILayout.TextField("Default Language Name (Index 0)", current, GUILayout.MinWidth(220)); 
+                string edited = EditorGUILayout.TextField("Default Language Name (Index 0)", current, GUILayout.MinWidth(220));
                 if (data.languages.Count > 0 && edited != current)
                 {
                     data.languages[0].name = edited;
@@ -470,8 +493,8 @@ public class LocalizationEditorWindow : EditorWindow
 
         using (new EditorGUILayout.HorizontalScope())
         {
-            newLanguageName = EditorGUILayout.TextField("New Language Name", newLanguageName); 
-            if (GUILayout.Button("Add Language", GUILayout.Width(100))) 
+            newLanguageName = EditorGUILayout.TextField("New Language Name", newLanguageName);
+            if (GUILayout.Button("Add Language", GUILayout.Width(100)))
             {
                 if (!string.IsNullOrWhiteSpace(newLanguageName))
                 {
@@ -594,7 +617,7 @@ public class LocalizationEditorWindow : EditorWindow
                 }
             }
 
-            if (GUILayout.Button("Save")) 
+            if (GUILayout.Button("Save"))
                 Save();
 
             GUILayout.FlexibleSpace();
@@ -647,11 +670,11 @@ public class LocalizationEditorWindow : EditorWindow
         string currentJson = JsonUtility.ToJson(data, true);
 
         int choice = EditorUtility.DisplayDialogComplex(
-            "Unsaved Changes", 
-            "You are about to close without saving. What would you like to do?", 
-            "Save and Close", 
+            "Unsaved Changes",
+            "You are about to close without saving. What would you like to do?",
+            "Save and Close",
             "Close (Don't Save)",
-            "Cancel" 
+            "Cancel"
         );
 
         if (choice == 0)
