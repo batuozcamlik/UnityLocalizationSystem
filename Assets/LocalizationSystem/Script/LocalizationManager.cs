@@ -13,8 +13,6 @@ public class LocalizationManager : MonoBehaviour
 
     public static LocalizationManager Instance;
 
-    // HATAYI ÇÖZEN KISIM: Bu değişkeni geri getirdik.
-    // Dosya adını buradan okuyacağız (örn: "localization.json")
     public string relativeJsonPath = "localization.json";
 
     public bool createSampleIfMissing = true;
@@ -36,16 +34,11 @@ public class LocalizationManager : MonoBehaviour
         get
         {
 #if UNITY_EDITOR
-            // Editörde: Assets/Resources/[relativeJsonPath] konumuna zorluyoruz.
-            // Bu sayede dosya Resources klasöründe oluşur ve Build'e dahil olur.
             string resourcesPath = Path.Combine(Application.dataPath, "Resources");
-
-            // Eğer dosya adında klasör yapısı varsa onu da hesaba katalım
             string combinedPath = Path.Combine(resourcesPath, relativeJsonPath).Replace("\\", "/");
 
             return combinedPath;
 #else
-            // Oyunda (Mobil/PC): Cihazın kalıcı veri yoluna kaydeder.
             return Path.Combine(Application.persistentDataPath, relativeJsonPath);
 #endif
         }
@@ -76,7 +69,6 @@ public class LocalizationManager : MonoBehaviour
 
     public void LoadOrCreate()
     {
-        // 1. Önce PersistentDataPath'te (yazılabilir alanda) dosya var mı diye bakar.
         if (File.Exists(FullPath))
         {
             try
@@ -91,15 +83,13 @@ public class LocalizationManager : MonoBehaviour
         }
         else
         {
-            // 2. Eğer PersistentDataPath'te yoksa, Resources'tan (Build içinden) okumaya çalışır.
-            // Resources.Load uzantı (.json) istemez, bu yüzden onu siliyoruz.
             string resourceName = Path.GetFileNameWithoutExtension(relativeJsonPath);
             TextAsset textAsset = Resources.Load<TextAsset>(resourceName);
 
             if (textAsset != null)
             {
                 data = JsonUtility.FromJson<LocalizationData>(textAsset.text) ?? new LocalizationData();
-                Save(); // Hemen yazılabilir alana kopyala
+                Save();
             }
             else
             {
@@ -148,37 +138,31 @@ public class LocalizationManager : MonoBehaviour
     {
         data = new LocalizationData();
 
-      
         data.languages.Add(new LanguageInfo { name = defaultLanguageName });
         data.languages.Add(new LanguageInfo { name = "Turkish" });
         data.languages.Add(new LanguageInfo { name = "Deutsch" });
-        data.languages.Add(new LanguageInfo { name = "Japanese" }); 
+        data.languages.Add(new LanguageInfo { name = "Japanese" });
 
-       
         data.words.Add(new WordColumn
         {
             items = new List<string> { "Hello", "How are you", "Quit", "Settings", "Play" }
         });
 
-        
         data.words.Add(new WordColumn
         {
             items = new List<string> { "Merhaba", "Nasılsın", "Çıkış", "Ayarlar", "Oyna" }
         });
 
-       
         data.words.Add(new WordColumn
         {
             items = new List<string> { "Hallo", "Wie geht's", "Beenden", "Einstellungen", "Spielen" }
         });
 
-    
         data.words.Add(new WordColumn
         {
             items = new List<string> { "こんにちは", "お元気ですか", "終了", "設定", "プレイ" }
         });
 
-       
         data.selectedLanguageIndex = 0;
     }
 

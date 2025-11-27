@@ -14,15 +14,13 @@ public class Test : MonoBehaviour
     [Header("UI Settings")]
     public TextMeshProUGUI allWordsText;
 
-    #region Runtime Functions
-
     private IEnumerator Start()
     {
         yield return null;
 
         if (LocalizationManager.Instance == null)
         {
-            Debug.LogWarning("LocalizationManager sahnede bulunamadý!");
+            Debug.LogWarning("LocalizationManager not found in the scene!");
             yield break;
         }
 
@@ -33,7 +31,7 @@ public class Test : MonoBehaviour
     {
         if (allWordsText == null)
         {
-            Debug.LogWarning("TextMeshPro objesi atanmamýþ!");
+            Debug.LogWarning("TextMeshPro object not assigned!");
             return;
         }
 
@@ -45,7 +43,7 @@ public class Test : MonoBehaviour
 
         if (data.words == null || data.words.Count == 0)
         {
-            allWordsText.text = "Liste boþ veya yüklenemedi.";
+            allWordsText.text = "List is empty or could not be loaded.";
             return;
         }
 
@@ -61,7 +59,7 @@ public class Test : MonoBehaviour
         string defaultLangName = data.languages[defaultIndex].name;
 
         StringBuilder sb = new StringBuilder();
-        sb.AppendLine($"<b>--- ÇEVÝRÝ KONTROL ---</b>");
+        sb.AppendLine($"<b>--- TRANSLATION CHECK ---</b>");
         sb.AppendLine($"<color=yellow>Key ({defaultLangName})</color> => <color=green>Value ({selectedLangName})</color>");
         sb.AppendLine("-------------------------");
 
@@ -72,15 +70,15 @@ public class Test : MonoBehaviour
             string key = defaultList[i];
             string value = selectedList[i];
 
-            if (string.IsNullOrEmpty(key)) key = "[BOÞ]";
-            if (string.IsNullOrEmpty(value)) value = "[BOÞ]";
+            if (string.IsNullOrEmpty(key)) key = "[EMPTY]";
+            if (string.IsNullOrEmpty(value)) value = "[EMPTY]";
 
             sb.AppendLine($"<b>[{i}]</b> {key}  =>  {value}");
         }
 
         if (selectedList.Count != defaultList.Count)
         {
-            sb.AppendLine("\n<color=red>HATA: Dil listeleri eþit uzunlukta deðil!</color>");
+            sb.AppendLine("\n<color=red>ERROR: Language lists are not of equal length!</color>");
         }
 
         allWordsText.text = sb.ToString();
@@ -92,30 +90,26 @@ public class Test : MonoBehaviour
             Debug.Log(LocalizationManager.Instance.Get(word));
     }
 
-    public void ChangeDil(int index, string languageName)
+    public void ChangeLanguage(int index, string languageName)
     {
         if (LocalizationManager.Instance == null) return;
 
         LocalizationManager.Instance.SetLanguage(index);
-        Debug.Log($"Dil Deðiþti : {languageName}");
+        Debug.Log($"Language Changed : {languageName}");
 
         PrintAllWords();
     }
-    #endregion
 }
 
 #if UNITY_EDITOR
 [CustomEditor(typeof(Test))]
 public class TestCodeEditor : Editor
 {
-    #region Fields
     private string word = "Hello";
     private int languageIndex = 0;
     private string[] languageNames = new string[0];
     private string jsonFileName = "localization.json";
-    #endregion
 
-    #region Inspector GUI
     public override void OnInspectorGUI()
     {
         GUILayout.Space(5);
@@ -155,7 +149,7 @@ public class TestCodeEditor : Editor
         EditorGUILayout.BeginHorizontal();
         if (languageNames == null || languageNames.Length == 0)
         {
-            EditorGUILayout.LabelField("Dil bulunamadý", GUILayout.ExpandWidth(true));
+            EditorGUILayout.LabelField("Language not found", GUILayout.ExpandWidth(true));
         }
         else
         {
@@ -168,7 +162,7 @@ public class TestCodeEditor : Editor
                 if (LocalizationManager.Instance != null)
                 {
                     string selectedLangName = languageNames[languageIndex];
-                    testCode.ChangeDil(languageIndex, selectedLangName);
+                    testCode.ChangeLanguage(languageIndex, selectedLangName);
                 }
             }
         }
@@ -179,9 +173,7 @@ public class TestCodeEditor : Editor
         GUILayout.Space(5);
         EditorGUILayout.LabelField("Created by Batu Özçamlýk", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 10 });
     }
-    #endregion
 
-    #region Helpers
     private void RefreshLanguageList()
     {
         if (LocalizationManager.Instance != null && LocalizationManager.Instance.Data != null)
@@ -240,6 +232,5 @@ public class TestCodeEditor : Editor
             }
         }
     }
-    #endregion
 }
 #endif

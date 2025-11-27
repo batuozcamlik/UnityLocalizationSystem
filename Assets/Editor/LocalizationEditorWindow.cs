@@ -8,7 +8,6 @@ using UnityEditorInternal;
 
 public class LocalizationEditorWindow : EditorWindow
 {
-    // Dosya adı sabit kalsın, yolu FullPath içinde belirleyeceğiz.
     private string relativeJsonPath = "localization.json";
     private LocalizationData data = new LocalizationData();
 
@@ -33,7 +32,6 @@ public class LocalizationEditorWindow : EditorWindow
     private List<int> orderList = new List<int>();
     private ReorderableList reorderList;
 
-
     [MenuItem("Window/Localization/Editor")]
     public static void ShowWindow()
     {
@@ -41,7 +39,6 @@ public class LocalizationEditorWindow : EditorWindow
         win.UpdateTitle();
         win.Show();
     }
-
 
     private void OnEnable()
     {
@@ -56,7 +53,6 @@ public class LocalizationEditorWindow : EditorWindow
         detectedManager = FindObjectOfType<LocalizationManager>();
         if (detectedManager != null)
         {
-            // Manager üzerindeki dosya adını alalım ama yolu biz yöneteceğiz
             if (!string.IsNullOrEmpty(detectedManager.relativeJsonPath))
                 relativeJsonPath = Path.GetFileName(detectedManager.relativeJsonPath);
 
@@ -65,13 +61,10 @@ public class LocalizationEditorWindow : EditorWindow
         }
     }
 
-    // DÜZELTİLEN KISIM BURASI
     private string FullPath
     {
         get
         {
-            // Dosyayı her zaman Assets/Resources içine kaydetmeye zorluyoruz.
-            // Bu sayede oyun Build alındığında dosya kaybolmaz.
             string resourcesPath = Path.Combine(Application.dataPath, "Resources");
 
             if (!Directory.Exists(resourcesPath))
@@ -100,7 +93,6 @@ public class LocalizationEditorWindow : EditorWindow
     {
         try
         {
-            // Klasör yoksa oluştur
             string dir = Path.GetDirectoryName(FullPath);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -156,7 +148,6 @@ public class LocalizationEditorWindow : EditorWindow
             var json = JsonUtility.ToJson(data, true);
             File.WriteAllText(FullPath, json);
 
-            // Unity'nin dosyayı hemen görmesi için yenile
             AssetDatabase.Refresh();
 
             isDirty = false;
@@ -187,7 +178,6 @@ public class LocalizationEditorWindow : EditorWindow
 
         ApplyFilterAndRebuildOrderList();
     }
-
 
     private void EnsureReorderList()
     {
@@ -404,7 +394,6 @@ public class LocalizationEditorWindow : EditorWindow
             reorderList.list = orderList;
     }
 
-
     private void OnGUI()
     {
         DrawToolbar();
@@ -435,8 +424,7 @@ public class LocalizationEditorWindow : EditorWindow
     {
         using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
         {
-            EditorGUILayout.LabelField("JSON Name:", GUILayout.Width(70));
-            // Sadece dosya ismini gösteriyoruz çünkü yol sabit (Assets/Resources)
+            EditorGUILayout.LabelField("JSON Name:", GUILayout.Width(75));
             string newPath = EditorGUILayout.TextField(relativeJsonPath, GUILayout.MinWidth(150));
             if (newPath != relativeJsonPath)
                 relativeJsonPath = newPath;
@@ -455,12 +443,17 @@ public class LocalizationEditorWindow : EditorWindow
                 Mathf.Max(0, data.languages.Count - 1)
             );
 
+            float originalLabelW = EditorGUIUtility.labelWidth;
+            EditorGUIUtility.labelWidth = 120f;
+
             int newSel = EditorGUILayout.Popup(
                 "Selected Language",
                 clamped,
                 GetLangNames(),
                 GUILayout.Width(280)
             );
+
+            EditorGUIUtility.labelWidth = originalLabelW;
 
             if (newSel != data.selectedLanguageIndex)
             {
@@ -480,7 +473,14 @@ public class LocalizationEditorWindow : EditorWindow
             using (new EditorGUI.DisabledScope(data.languages.Count == 0))
             {
                 string current = (data.languages.Count > 0) ? (data.languages[0].name ?? "") : "";
-                string edited = EditorGUILayout.TextField("Default Language Name (Index 0)", current, GUILayout.MinWidth(220));
+
+                float defaultLabelWidth = EditorGUIUtility.labelWidth;
+                EditorGUIUtility.labelWidth = 210f;
+
+                string edited = EditorGUILayout.TextField("Default Language Name (Index 0)", current, GUILayout.MinWidth(300), GUILayout.ExpandWidth(true));
+
+                EditorGUIUtility.labelWidth = defaultLabelWidth;
+
                 if (data.languages.Count > 0 && edited != current)
                 {
                     data.languages[0].name = edited;
@@ -493,7 +493,7 @@ public class LocalizationEditorWindow : EditorWindow
 
         using (new EditorGUILayout.HorizontalScope())
         {
-            newLanguageName = EditorGUILayout.TextField("New Language Name", newLanguageName);
+            newLanguageName = EditorGUILayout.TextField("New Language Name", newLanguageName, GUILayout.MinWidth(300), GUILayout.ExpandWidth(true));
             if (GUILayout.Button("Add Language", GUILayout.Width(100)))
             {
                 if (!string.IsNullOrWhiteSpace(newLanguageName))
@@ -524,6 +524,9 @@ public class LocalizationEditorWindow : EditorWindow
             {
                 EditorGUI.BeginChangeCheck();
 
+                float oldLW = EditorGUIUtility.labelWidth;
+                EditorGUIUtility.labelWidth = 100f;
+
                 filterLanguageIndex = EditorGUILayout.Popup(
                     new GUIContent("Filter Language"),
                     Mathf.Clamp(
@@ -534,6 +537,8 @@ public class LocalizationEditorWindow : EditorWindow
                     GetLangNames(),
                     GUILayout.Width(260)
                 );
+
+                EditorGUIUtility.labelWidth = oldLW;
 
                 filterText = EditorGUILayout.TextField(
                     $"Filter ({SafeLangName(filterLanguageIndex)})",
@@ -581,7 +586,6 @@ public class LocalizationEditorWindow : EditorWindow
 
         float scrollContentHeight = Mathf.Max(totalContentHeight, totalRect.height);
 
-
         scrollPosGrid = GUI.BeginScrollView(
             totalRect,
             scrollPosGrid,
@@ -624,7 +628,6 @@ public class LocalizationEditorWindow : EditorWindow
         }
     }
 
-
     private void RemoveLanguageAt(int langIndex)
     {
         if (langIndex <= 0 || langIndex >= data.languages.Count) return;
@@ -657,7 +660,6 @@ public class LocalizationEditorWindow : EditorWindow
         }
         NormalizeLengths();
     }
-
 
     private void OnDestroy()
     {
