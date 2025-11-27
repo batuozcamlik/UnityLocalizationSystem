@@ -1,186 +1,83 @@
-# Unity Localization Grid (Index-Based JSON Localization)
+# 🌍 Unity JSON Localization System
 
-Küçük/orta ölçekli Unity projeleri için **index tabanlı**, **JSON** dosyasıyla çalışan, hem **runtime API** hem de **Editor penceresi** sunan hafif bir lokalizasyon sistemi.
+A lightweight, robust, and easy-to-use localization system for Unity. This tool allows you to manage multiple languages and translations through a custom **Editor Window** and access them efficiently at runtime using a JSON-based architecture.
 
-> 🔧 Öne Çıkanlar
-- Index bazlı dil sistemi (0 = Default)
-- JSON tabanlı veri kaydı
-- Kolon / satır otomatik hizalama
-- Editor grid arayüzü
-- Dil & kelime ekleme / silme
-- Runtime API
-- Eksik çeviriler için fallback
-- Build’de `Application.persistentDataPath` desteği
+## ✨ Features
 
----
+* **Custom Editor Window:** Manage all your translations in a grid-based layout without leaving Unity.
+* **JSON Based:** Human-readable data format stored in `Resources` for easy build inclusion.
+* **Runtime & Editor Fallback:** Automatically handles data saving/loading between `PersistentDataPath` (Runtime) and `Resources` (Editor).
+* **Reorderable Lists:** Drag and drop rows to organize your translation keys.
+* **Filtering & Search:** Quickly find keys or languages using the built-in search bar.
+* **Missing Key Handling:** Automatically fills missing entries with placeholders to ensure data integrity across languages.
+* **Simple API:** Access translations with a single line of code.
+* **TMPro Support:** Ready to use with TextMeshPro.
 
-## Kurulum
+## 📦 Installation
 
-1) Aşağıdaki scriptleri projeye ekleyin:
+1. Download the package and import it into your Unity project.
+2. Ensure you have the `Resources` folder in your `Assets` directory (The system will create the JSON file here).
+3. Add the `LocalizationManager` script to a GameObject in your first scene (e.g., a "GameManager" object).
+4. *(Optional)* Add the `Test` script to check if everything is working correctly.
 
-- `LocalizationManager.cs`
-- `LocalizationTypes.cs`
-- `LocalizationEditorWindow.cs`
+## 🛠️ Editor Usage
 
-2) Unity Hierarchy → GameObject → `LocalizationManager` ekleyin  
-   (Singleton + DontDestroyOnLoad)
+Go to **Window > Localization > Editor** to open the management window.
 
-3) Inspector:
-- `relativeJsonPath` – JSON yolu (`Localization/localization.json`)
-- `createSampleIfMissing` – yoksa örnek JSON oluştur
-- `defaultLanguageName` – index 0 dil ismi
+1. **Add Language:** Enter a name (e.g., "Spanish") in the "New Language Name" field and click **Add Language**.
+2. **Add Words:** Click the **Add New Word** button at the bottom or use the `+` icon in the list.
+3. **Edit Translations:**
+   * The **Index 0** column is your "Key" (usually English).
+   * Fill in the translations for other languages in the corresponding columns.
+4. **Reorder:** Grab the handle on the left of any row to reorder words.
+5. **Filter:** Use the filter dropdown and text box to search for specific words within a specific language.
+6. **Save:** Click **Save** to write changes to `localization.json`.
 
----
+> **Note:** The system automatically marks unsaved changes. Don't forget to save before closing the window!
 
-## Hızlı Başlangıç
+## 💻 Scripting API
+
+The system uses a Singleton pattern for easy access.
+
+### 1. Get a Translation
+To get a translated string based on the currently selected language:
 
 ```csharp
-void Start()
-{
-    LocalizationManager.Instance.SetLanguage(1); // İngilizce örneği
-    string hello = LocalizationManager.Instance.Get("Merhaba");
-    Debug.Log(hello);
+// "Hello" is the key (the word in the default language/Index 0)
+string myText = LocalizationManager.Instance.Get("Hello");
+Debug.Log(myText); 
+```
+
+### 2. Change Language
+To switch the active language at runtime:
+
+```csharp
+// Set by Index (0 = Default/English, 1 = Turkish, etc.)
+LocalizationManager.Instance.SetLanguage(1);
+
+// Refresh your UI after changing language
+myTextMeshPro.text = LocalizationManager.Instance.Get("Hello");
+```
+
+### 3. Check Initialization
+It is recommended to check if the manager is loaded:
+
+```csharp
+if (LocalizationManager.Instance != null) {
+    // Do localization logic
 }
 ```
 
-> `Get()` → default dilde arar → seçili dildeki karşılığı döner → yoksa default döner
+## 📂 File Structure
 
----
+* **`LocalizationManager.cs`**: The core runtime engine. Handles loading/saving JSON, Singleton instance, and retrieval logic (`Get()`).
+* **`LocalizationEditorWindow.cs`**: The custom Editor GUI logic. Handles the grid view, reordering, and file I/O operations in the editor.
+* **`LocalizationTypes.cs`**: Serialized classes (`LocalizationData`, `LanguageInfo`) that define the data structure.
+* **`Test.cs`**: A debug script to visualize all keys and values in the scene for testing purposes.
 
-## Editor Penceresi
+## 📝 License & Credits
 
-Menü:
-```
-Window → Localization → Editor
-```
+This project was created by **Batu Özçamlık**.
 
-Özellikler:
-- Yatay: diller
-- Dikey: kelimeler
-- JSON path seçimi
-- Kaydet / Yükle
-- Dil seçimi
-- Kelime filtreleme
-- Yeni kelime ekle
-- Yeni dil ekle
-- Kelime sil
-- Dil sil (default silinemez)
-- Kapanırken kaydedilmemiş değişiklik uyarısı
-
-Yeni kelime eklediğinizde diğer diller otomatik olarak `__MISSING__` değerini alır.
-
----
-
-## JSON Model
-
-```json
-{
-  "languages": [
-    { "name": "Türkçe" },
-    { "name": "English" }
-  ],
-  "words": [
-    ["Merhaba", "Hello"],
-    ["Elma", "Apple"]
-  ],
-  "selectedLanguageIndex": 0
-}
-```
-
-- `languages[i].name` → Dil adı
-- `words[row][column]` → Kelime
-- `selectedLanguageIndex` → Aktif dil
-
----
-
-## Runtime API
-
-### Dil Seç
-```csharp
-void SetLanguage(int languageIndex)
-```
-
-### Dil Ekle
-```csharp
-void AddLanguage(string name)
-```
-
-### Default Kolona Kelime Ekle
-```csharp
-int AddWordToDefault(string newWord)
-```
-
-### Belirli Hücreye Çeviri Yaz
-```csharp
-void SetWordAt(int languageIndex, int wordIndex, string value)
-```
-
-### Get (default kelime ile)
-```csharp
-string Get(string defaultWord)
-```
-
-### GetByIndex
-```csharp
-string GetByIndex(int wordIndex)
-```
-
-### Default Dil içinde Arama
-```csharp
-List<(int index, string word)> SearchInDefault(string contains, bool caseSensitive=false)
-```
-
----
-
-## ✅ Örnek Kullanım
-
-```csharp
-// Çeviri al
-string translateWord = LocalizationManager.Instance.Get("YeniKelime");
-
-// Index üzerinden çeviri al
-string translated = LocalizationManager.Instance.GetByIndex(index);
-
-Debug.Log("Kelime: " + translateWord);
-Debug.Log("Index: " + index);
-Debug.Log("Index üzerinden: " + translated);
-```
-
----
-
-## Dosya Yapısı & Dağıtım
-
-- **Unity Editor**  
-  JSON → proje kökünde çözülür
-
-- **Build Ortamı**  
-  JSON → `Application.persistentDataPath`
-
-JSON dosyanızı repository içinde saklamanız önerilir.
-
----
-
-## SSS
-
-✅ Yeni kelime ekledim → Diğer diller boş  
-→ `__MISSING__` otomatik yerleştirilir
-
-✅ Default dil adını değiştirmek  
-→ Editor üst toolbar
-
-✅ Yanlış dil ekledim  
-→ Dil sütununu sil
-
-✅ Kelime index’ini almak  
-→ `SearchInDefault()` kullanılabilir
-
----
-
-## Lisans & Atıf
-
-Inspector ve Editor UI üzerinde imza yer alır:  
-**Created by Batu Özçamlık — www.batuozcamlik.com**
-
-Kullanımda atıf memnuniyetle karşılanır.
-
----
+* **Website:** [www.batuozcamlik.com](http://www.batuozcamlik.com)
+* **License:** MIT License (Free to use in commercial and personal projects).
